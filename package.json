@@ -1,14 +1,80 @@
 {
   "name": "mct-content-calendar",
   "version": "1.0.0",
-  "description": "MCT module for CONTENT-CALENDAR",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "dev": "tsx watch src/index.ts",
-    "test": "jest",
-    "setup": "npm install && npx drizzle-kit push:pg"
+    "start": "node dist/index.js",
+    "dev": "ts-node-dev src/index.ts"
   },
-  "keywords": ["mct", "api", "microservice"],
-  "license": "MIT"
+  "dependencies": {
+    "express": "^4.17.1",
+    "body-parser": "^1.19.0",
+    "mongoose": "^5.11.15",
+    "cors": "^2.8.5",
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^4.1.3",
+    "ts-node-dev": "^1.0.0",
+    "@types/node": "^14.14.10",
+    "@types/express": "^4.17.8",
+    "@types/mongoose": "^5.10.3",
+    "@types/cors": "^2.8.8"
+  }
 }
+### File: `src/index.ts`
+import express from 'express';
+import bodyParser from 'body-parser';
+import cors from 'cors';
+import { setupRoutes } from './api/routes';
+import { connectDatabase } from './db/schema';
+import { setupMcpServer } from './mct/server';
+const app = express();
+const port = process.env.PORT || 3000;
+app.use(cors());
+app.use(bodyParser.json());
+setupRoutes(app);
+connectDatabase();
+setupMcpServer();
+app.listen(port, () => {
+  console.log(`Server running on http://localhost:${port}`);
+});
+### File: `src/api/routes.ts`
+import { Express } from 'express';
+export function setupRoutes(app: Express) {
+  app.get('/api/events', (req, res) => {
+    // Logic to fetch events
+    res.json({ message: 'Events fetched successfully' });
+  });
+  app.post('/api/events', (req, res) => {
+    // Logic to create an event
+    res.json({ message: 'Event created successfully' });
+  });
+}
+### File: `src/db/schema.ts`
+import mongoose from 'mongoose';
+const eventSchema = new mongoose.Schema({
+  title: String,
+  description: String,
+  date: Date
+});
+export const Event = mongoose.model('Event', eventSchema);
+export function connectDatabase() {
+  mongoose.connect('mongodb://localhost:27017/contentCalendar', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+  }).then(() => console.log('MongoDB connected'))
+    .catch(err => console.log('MongoDB connection error:', err));
+}
+### File: `src/mct/server.ts`
+import { McpServer, StdioServerTransport } from '@modelcontextprotocol/sdk';
+export function setupMcpServer() {
+  const server = new McpServer({ name: "content-calendar-server", version: "1.0.0" });
+  const transport = new StdioServerTransport();
+  server.connect(transport);
+}
+### File: `src/mct/tools.ts`
+// Define tools to interact with the content calendar
+### File: `src/services/calendarService.ts`
+// Implement calendar management logic here
